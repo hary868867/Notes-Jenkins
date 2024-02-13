@@ -1,0 +1,4 @@
+jenkins intro video - 6.13min - interview question on say about jenkins
+
+after installing jenkins ( check installation video ), go to manage jenkins- global tool configuration & add jdk and maven
+

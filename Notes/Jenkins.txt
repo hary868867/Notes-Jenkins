@@ -1,0 +1,15 @@
+Jenkins
+
+Jenkins setup...  go to jenkins.io, download weekly release ... generic java .war ( 2.245 is what used in course )
+                  command # java -jar jenkins.war # initialises jenkins and asks for the setup of jenkins ...gives the initial password for the setup
+                  now open port localhost:8080, jenkins home page pops up, give the password that came as output, next user you will go to user page, create admin password & user and enter, the next page is instance configuration ( we can skip this and enter ) ... the jenkins setup is done 
+
+create job -> choose freestyle project ... the first job is created 
+in the job ... go to source code management and give the git url of code & then give which branch it needs to build and then apply .. all this will be in the configure section, so if you come out, you can click on configure which it will take back you that page again
+
+				  
+
+
+https://github.com/g0t4/jgsu-spring-petclinic
+
+

@@ -1,0 +1,27 @@
+$ cat users.xml
+<?xml version='1.1' encoding='UTF-8'?>
+<hudson.model.UserIdMapper>
+  <version>1</version>
+  <idToDirectoryNameMap class="concurrent-hash-map">
+    <entry>
+      <string>hary867</string>
+      <string>hary867_11918943041836398363</string>
+    </entry>
+  </idToDirectoryNameMap>
+
+
+$ cat users.xml
+<?xml version='1.1' encoding='UTF-8'?>
+<hudson.model.UserIdMapper>
+  <version>1</version>
+  <idToDirectoryNameMap class="concurrent-hash-map">
+    <entry>
+      <string>hary899</string>
+      <string>hary899_16875773157784920415</string>
+    </entry>
+    <entry>
+      <string>hary867</string>
+      <string>hary867_11918943041836398363</string>
+    </entry>
+  </idToDirectoryNameMap>
+</hudson.model.UserIdMappe

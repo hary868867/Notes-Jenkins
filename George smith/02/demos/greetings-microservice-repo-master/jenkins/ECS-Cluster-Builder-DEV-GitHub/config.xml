@@ -1,0 +1,189 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<project>
+  <actions/>
+  <description>This job builds the ECS Cluster for the EP Storefront on top of the already deployed VPC</description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <jenkins.model.BuildDiscarderProperty>
+      <strategy class="hudson.tasks.LogRotator">
+        <daysToKeep>-1</daysToKeep>
+        <numToKeep>2</numToKeep>
+        <artifactDaysToKeep>-1</artifactDaysToKeep>
+        <artifactNumToKeep>-1</artifactNumToKeep>
+      </strategy>
+    </jenkins.model.BuildDiscarderProperty>
+    <com.coravy.hudson.plugins.github.GithubProjectProperty plugin="github@1.29.5">
+      <projectUrl>https://github.com/georgesmith2017/autotrader-cloudformation-templates/</projectUrl>
+      <displayName></displayName>
+    </com.coravy.hudson.plugins.github.GithubProjectProperty>
+    <hudson.model.ParametersDefinitionProperty>
+      <parameterDefinitions>
+        <hudson.model.StringParameterDefinition>
+          <name>ECS_STACK_NAME</name>
+          <description>The name of the CF stack that creates an ECS Cluster</description>
+          <defaultValue>Autotrader-ECS-Cluster-DEV-Head </defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>CUSTOMER</name>
+          <description>The customer portion of the AccountRole tag. Valid values  for EP Storefront  include:
+- autotrader</description>
+          <defaultValue>autotrader</defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>ENV_TYPE</name>
+          <description>The environment type portion of the AccountRole tag. Valid values for EP Storefront include:
+- dev
+- qa
+- stg
+- prod</description>
+          <defaultValue>dev</defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>INSTANCE_TYPE</name>
+          <description>The role portion of the InstanceRole tag.  Valid values for Autotrader Storefront include:
+- head
+- auth</description>
+          <defaultValue>head</defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>KEYPAIR_NAME</name>
+          <description>The key pair needed to SSH into the EC2 instances that are part of the ECS Cluster
+- old storefront-kp1
+</description>
+          <defaultValue>at-gs1</defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>EC2_INSTANCE_CAPACITY</name>
+          <description>The number of EC2 instances that will be available to ECS to launch tasks on</description>
+          <defaultValue>1</defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>EC2_INSTANCE_MAX_CAPACITY</name>
+          <description>The MAX number of EC2 instances that will be available to ECS to launch tasks on.</description>
+          <defaultValue>2</defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>ECS_IMAGE_URI</name>
+          <description>The URI to the Docker repo in ECR
+</description>
+          <defaultValue>239136941756.dkr.ecr.us-east-1.amazonaws.com/autotrader</defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>ECS_IMAGE_VERSION</name>
+          <description>The tag of the Docker image we wish to deploy. This parameter is also used for blue/green deployments.</description>
+          <defaultValue>latest</defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>DESIRED_TASK_COUNT</name>
+          <description>The number of tasks you want the ECS service to run</description>
+          <defaultValue>1</defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>BACKEND_URL</name>
+          <description>Currently NOT used</description>
+          <defaultValue>autotrader.backend.com</defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>VPC_ALB_STACK_NAME</name>
+          <description>The name of the VPC stack that this stack will be using to deploy EC2 instances in the target VPC</description>
+          <defaultValue>ECS-VPC-DEV-VPCID</defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>AWS_REGION</name>
+          <description>The region for the CloudFormation command</description>
+          <defaultValue>us-east-1</defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>MAX_PERCENT</name>
+          <description>The max number of tasks to run</description>
+          <defaultValue>100</defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>MIN_HEALTHY_PERCENT</name>
+          <description>The min number of tasks to run - set to a default of zero, so that a single ECS Instance can be used during redeployment, with some downtime while switching to the new task.</description>
+          <defaultValue>0</defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+      </parameterDefinitions>
+    </hudson.model.ParametersDefinitionProperty>
+  </properties>
+  <scm class="hudson.plugins.git.GitSCM" plugin="git@4.0.0">
+    <configVersion>2</configVersion>
+    <userRemoteConfigs>
+      <hudson.plugins.git.UserRemoteConfig>
+        <url>https://github.com/georgesmith2017/autotrader-cloudformation-templates.git</url>
+        <credentialsId>gsmith-github</credentialsId>
+      </hudson.plugins.git.UserRemoteConfig>
+    </userRemoteConfigs>
+    <branches>
+      <hudson.plugins.git.BranchSpec>
+        <name>*/master</name>
+      </hudson.plugins.git.BranchSpec>
+    </branches>
+    <doGenerateSubmoduleConfigurations>false</doGenerateSubmoduleConfigurations>
+    <submoduleCfg class="list"/>
+    <extensions/>
+  </scm>
+  <canRoam>true</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers/>
+  <concurrentBuild>false</concurrentBuild>
+  <builders>
+    <hudson.tasks.Shell>
+      <command>#!/bin/bash
+
+# export AWS_PROFILE=gs-aws
+
+ACCOUNT_ROLE=&quot;${CUSTOMER}-${ENV_TYPE}-&quot;
+INSTANCE_ROLE=&quot;api-${INSTANCE_TYPE}-&quot;
+
+# echo &quot;Account Role + Instance Role: $ACCOUNT_ROLE$INSTANCE_ROLE&quot;
+aws cloudformation deploy \
+	--template-file ecs/ecs-cluster-without-alb.yml \
+    --region ${AWS_REGION} \
+    --stack-name ${ECS_STACK_NAME} --capabilities CAPABILITY_IAM  \
+    --parameter-overrides VpcAlbStackName=${VPC_ALB_STACK_NAME} \
+    KeyName=${KEYPAIR_NAME} \
+    DesiredCapacity=${EC2_INSTANCE_CAPACITY} \
+    MaxSize=${EC2_INSTANCE_MAX_CAPACITY} \
+    DesiredTaskCount=${DESIRED_TASK_COUNT} \
+    MaximumPercent=${MAX_PERCENT}\
+    MinimumHealthyPercent=${MIN_HEALTHY_PERCENT}\
+    EcsImageUri=${ECS_IMAGE_URI} \
+    EcsImageVersion=${ECS_IMAGE_VERSION} \
+    AccountRole=$ACCOUNT_ROLE \
+    InstanceRole=$INSTANCE_ROLE \
+    BackendUrl=${BACKEND_URL}
+
+
+
+
+</command>
+    </hudson.tasks.Shell>
+  </builders>
+  <publishers/>
+  <buildWrappers>
+    <hudson.plugins.ws__cleanup.PreBuildCleanup plugin="ws-cleanup@0.37">
+      <deleteDirs>false</deleteDirs>
+      <cleanupParameter></cleanupParameter>
+      <externalDelete></externalDelete>
+      <disableDeferredWipeout>false</disableDeferredWipeout>
+    </hudson.plugins.ws__cleanup.PreBuildCleanup>
+  </buildWrappers>
+</project>

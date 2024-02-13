@@ -1,0 +1,95 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<project>
+  <actions/>
+  <description>This job uses a CloudFormation template to create:&#xd;
+- VPC with&#xd;
+- 2 public subnets&#xd;
+- Internet gateway&#xd;
+- Routing tables&#xd;
+- NACL&#xd;
+- ALB</description>
+  <displayName>1. ECS-VPC-Builder-DEV</displayName>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <jenkins.model.BuildDiscarderProperty>
+      <strategy class="hudson.tasks.LogRotator">
+        <daysToKeep>-1</daysToKeep>
+        <numToKeep>2</numToKeep>
+        <artifactDaysToKeep>-1</artifactDaysToKeep>
+        <artifactNumToKeep>-1</artifactNumToKeep>
+      </strategy>
+    </jenkins.model.BuildDiscarderProperty>
+    <hudson.model.ParametersDefinitionProperty>
+      <parameterDefinitions>
+        <hudson.model.StringParameterDefinition>
+          <name>VPC_STACK_NAME</name>
+          <description>The name of the VPC stack that contains the components listed in the description above</description>
+          <defaultValue>ECS-VPC-DEV</defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.ChoiceParameterDefinition>
+          <name>EC2_INSTANCE_TYPE</name>
+          <description>The allowed EC2 instance types</description>
+          <choices class="java.util.Arrays$ArrayList">
+            <a class="string-array">
+              <string>t2.micro</string>
+              <string>t2.medium</string>
+            </a>
+          </choices>
+        </hudson.model.ChoiceParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>AWS_REGION</name>
+          <description></description>
+          <defaultValue>us-east-1</defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+      </parameterDefinitions>
+    </hudson.model.ParametersDefinitionProperty>
+  </properties>
+  <scm class="hudson.plugins.git.GitSCM" plugin="git@4.0.0">
+    <configVersion>2</configVersion>
+    <userRemoteConfigs>
+      <hudson.plugins.git.UserRemoteConfig>
+        <url>ssh://git-codecommit.us-east-1.amazonaws.com/v1/repos/autotrader-cloudformation-templates</url>
+        <credentialsId>11b3b34c-79a3-484e-b3b9-c4a474aee62a</credentialsId>
+      </hudson.plugins.git.UserRemoteConfig>
+    </userRemoteConfigs>
+    <branches>
+      <hudson.plugins.git.BranchSpec>
+        <name>*/master</name>
+      </hudson.plugins.git.BranchSpec>
+    </branches>
+    <doGenerateSubmoduleConfigurations>false</doGenerateSubmoduleConfigurations>
+    <submoduleCfg class="list"/>
+    <extensions/>
+  </scm>
+  <canRoam>true</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers/>
+  <concurrentBuild>false</concurrentBuild>
+  <builders>
+    <hudson.tasks.Shell>
+      <command>#!/bin/bash
+
+echo &quot;Starting ...&quot;
+echo &quot;aws location: $(which aws)&quot;
+echo &quot;PWD: $(pwd)&quot;
+echo
+
+# Deploy infrastructure for ECS cluster
+# export AWS_PROFILE=gs-aws
+aws cloudformation deploy \
+	--stack-name ${VPC_STACK_NAME} \
+	--region ${AWS_REGION} \
+    --template-file ecs/ecs-vpc-subnets-alb.yml \
+    --tags stack-type=autotrader-ecs \
+    stack-version=1.0.0 \
+    --capabilities CAPABILITY_IAM \
+    --parameter-overrides InstanceType=${EC2_INSTANCE_TYPE}</command>
+    </hudson.tasks.Shell>
+  </builders>
+  <publishers/>
+  <buildWrappers/>
+</project>

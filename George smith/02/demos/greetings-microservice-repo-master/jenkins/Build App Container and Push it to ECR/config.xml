@@ -1,0 +1,111 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<project>
+  <actions/>
+  <description>This job polls a CodeCommit repository for changes and is triggered after a code push.</description>
+  <displayName>3.1 Build App Container and Push It to ECR - CodeCommit</displayName>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <jenkins.model.BuildDiscarderProperty>
+      <strategy class="hudson.tasks.LogRotator">
+        <daysToKeep>-1</daysToKeep>
+        <numToKeep>2</numToKeep>
+        <artifactDaysToKeep>-1</artifactDaysToKeep>
+        <artifactNumToKeep>-1</artifactNumToKeep>
+      </strategy>
+    </jenkins.model.BuildDiscarderProperty>
+    <hudson.model.ParametersDefinitionProperty>
+      <parameterDefinitions>
+        <hudson.model.StringParameterDefinition>
+          <name>REPO_NAME</name>
+          <description>The name of the ECR repo that will also be used as the initial tag when building the image. This is necessary so that we can tag and push the built image using a consistent ID - in this case the initial tag</description>
+          <defaultValue>autotrader</defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>TAG</name>
+          <description>The Docker image tag, e.g. &quot;latest&quot;, or v1.0.9</description>
+          <defaultValue>latest</defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>ACCOUNT_ID</name>
+          <description>The  AWS account number where the ECR and repos reside</description>
+          <defaultValue>239136941756</defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>AWS_REGION</name>
+          <description>The region you want where you want your ECR Docker images to reside</description>
+          <defaultValue>--region us-east-1</defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+      </parameterDefinitions>
+    </hudson.model.ParametersDefinitionProperty>
+  </properties>
+  <scm class="hudson.plugins.git.GitSCM" plugin="git@4.0.0">
+    <configVersion>2</configVersion>
+    <userRemoteConfigs>
+      <hudson.plugins.git.UserRemoteConfig>
+        <url>ssh://git-codecommit.us-east-1.amazonaws.com/v1/repos/greetings-microservice-repo</url>
+        <credentialsId>11b3b34c-79a3-484e-b3b9-c4a474aee62a</credentialsId>
+      </hudson.plugins.git.UserRemoteConfig>
+    </userRemoteConfigs>
+    <branches>
+      <hudson.plugins.git.BranchSpec>
+        <name>*/master</name>
+      </hudson.plugins.git.BranchSpec>
+    </branches>
+    <doGenerateSubmoduleConfigurations>false</doGenerateSubmoduleConfigurations>
+    <submoduleCfg class="list"/>
+    <extensions/>
+  </scm>
+  <canRoam>true</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers>
+    <hudson.triggers.SCMTrigger>
+      <spec>H/02 * * * *</spec>
+      <ignorePostCommitHooks>false</ignorePostCommitHooks>
+    </hudson.triggers.SCMTrigger>
+  </triggers>
+  <concurrentBuild>false</concurrentBuild>
+  <builders>
+    <hudson.tasks.Shell>
+      <command>#!/bin/bash
+
+echo &quot;&quot;
+echo &quot;----------- EXECUTE-SHELL-------------&quot;
+echo &quot;Build triggered via AWS CodeCommit ...&quot;
+
+# Build WAR file
+mvn clean prepare-package war:war
+
+# Build container tag it for the ECR repo
+docker build -t &quot;${ACCOUNT_ID}.dkr.ecr.us-east-1.amazonaws.com/${REPO_NAME}:${TAG}&quot; --file Dockerfile .
+
+
+# Remove old image in ECR
+aws ecr batch-delete-image --repository-name ${REPO_NAME} --image-ids imageTag=${TAG}
+
+# Get ECR login &amp; execute log in command
+DOCKER_LOGIN_COMMAND=$(aws ecr get-login --no-include-email ${AWS_REGION})
+eval &quot;$DOCKER_LOGIN_COMMAND&quot;
+
+# Push new image to ECR
+docker push &quot;${ACCOUNT_ID}.dkr.ecr.us-east-1.amazonaws.com/${REPO_NAME}:${TAG}&quot;
+
+# Remove all images, including dangling ones, to avoid running out of space
+docker images -a | grep &quot;autotrader&quot; | awk &apos;{print $3}&apos; | xargs docker rmi -f</command>
+    </hudson.tasks.Shell>
+  </builders>
+  <publishers/>
+  <buildWrappers>
+    <hudson.plugins.ws__cleanup.PreBuildCleanup plugin="ws-cleanup@0.37">
+      <deleteDirs>false</deleteDirs>
+      <cleanupParameter></cleanupParameter>
+      <externalDelete></externalDelete>
+      <disableDeferredWipeout>false</disableDeferredWipeout>
+    </hudson.plugins.ws__cleanup.PreBuildCleanup>
+  </buildWrappers>
+</project>

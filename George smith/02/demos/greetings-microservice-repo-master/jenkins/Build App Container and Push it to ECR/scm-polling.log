@@ -1,0 +1,11 @@
+Started on Dec 3, 2019 10:16:00 AM
+Using strategy: Default
+[poll] Last Built Revision: Revision 786f96340f951b36a68fa6f4dce8c4011b40d4fa (refs/remotes/origin/master)
+using credential 11b3b34c-79a3-484e-b3b9-c4a474aee62a
+ > git --version # timeout=10
+using GIT_SSH to set credentials 
+ > git ls-remote -h -- ssh://git-codecommit.us-east-1.amazonaws.com/v1/repos/greetings-microservice-repo # timeout=10
+Found 1 remote heads on ssh://git-codecommit.us-east-1.amazonaws.com/v1/repos/greetings-microservice-repo
+[poll] Latest remote head revision on refs/heads/master is: 786f96340f951b36a68fa6f4dce8c4011b40d4fa - already built by 53
+Done. Took 0.24 sec
+No changes
